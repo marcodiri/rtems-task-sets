@@ -105,7 +105,7 @@ void User_program(
     status = rtems_task_start( release_task_id[ 2 ], Tsk3_release, 3 );
     check_status_fatal(status,RTEMS_SUCCESSFUL,"rtems_task_start_3.1");
 
-    printf("\nSTART\n");
+    log_send("START");
 
     int loops = 3;
 
@@ -178,8 +178,6 @@ rtems_task Tsk1_release(
     name = rtems_build_name( 'P', 'E', 'R', '1' );
     status = rtems_rate_monotonic_create( name, &period );
     check_status_fatal(status,RTEMS_SUCCESSFUL,"rtems_rate_monotonic_create");
-
-    log_send( "tsk1" );
 
     uint32_t iter = 0;
     while ( iter < max_iter ) {

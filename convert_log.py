@@ -38,7 +38,7 @@ def main(argv):
         for s in spl:
             ns, event = s.split("-")
             ns = int(ns)
-            if event == "tsk1":
+            if event == "START":
                 start = ns
             else:
                 ns -= start
