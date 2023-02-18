@@ -1,0 +1,26 @@
+import rtems_waf.rtems as rtems
+
+def build(bld):
+    rtems.build(bld)
+    
+    # disable optimizations otherwise busy_sleep won't work
+    bld.env.CFLAGS += [
+        '-O0',
+        '-g',
+        '-fno-tree-loop-optimize',
+        '-fno-var-tracking-assignments',
+        '-fno-var-tracking',
+        '-fno-tree-loop-ivcanon',
+        '-fno-tree-loop-im',
+        '-fno-tree-loop-if-convert',
+        '-fno-tree-forwprop',
+        '-fno-auto-inc-dec',
+        '-fno-aggressive-loop-optimizations',
+        ]
+    
+    bld.env.CFLAGS += [
+        '-DTIME_TICKS',  # log events in tick units
+        '-DLOG_TO_FILE',  # create log file
+        ]
+
+    bld.recurse('tsk_set1_shell')
