@@ -96,8 +96,8 @@ void busy_sleep_ms(uint32_t ms)
     uint32_t cycles = 85000;
     #else
 	/* cycles corresponding to roughly 1ms
-	   in pc386 qemu simulator */
-    uint32_t cycles = 106200;
+	   in xilinx_zynqmp_lp64_qemu simulator */
+    uint32_t cycles = 118000;
     #endif
 
     uint32_t count = 0;

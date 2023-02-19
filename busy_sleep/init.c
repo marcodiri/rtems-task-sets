@@ -18,10 +18,12 @@ rtems_task Init(
 
 	uint64_t meas[MEAS_N];
 
-	#if RTEMS_BSP==raspberrypi4b
+	#if RTEMS_BSP==xilinx_zynqmp_lp64_qemu
+	printf("BSP: xilinx_zynqmp_lp64_qemu\n\n");
+	#elif RTEMS_BSP==raspberrypi4b
 	printf("BSP: raspberrypi4b\n\n");
-	#elif RTEMS_BSP==pc386
-	printf("BSP: pc386\n\n");
+	#else
+	printf("BSP: unknown\n\n");
     #endif
 	
 	start = rtems_clock_get_uptime_nanoseconds();

@@ -10,8 +10,8 @@
 #include <rtems.h>
 #include <bsp.h>
 
-#define pc386 1
-#define raspberrypi4b 2
+#define xilinx_zynqmp_lp64_qemu 1
+#define raspberrypi4b           2
 
 
 extern rtems_id log_q_id;
