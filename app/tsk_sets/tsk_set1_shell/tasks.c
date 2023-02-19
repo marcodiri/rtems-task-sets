@@ -35,8 +35,9 @@ void User_program(
     srand(time(NULL));
 
     FILE *fp = NULL;
+    char *log_filename = "log.txt";
     #ifdef LOG_TO_FILE
-    fp = fopen("log.txt", "w");
+    fp = fopen(log_filename, "w");
     if ( !fp )
     {
         printf("Error: Could not open file.\n");
@@ -137,7 +138,7 @@ void User_program(
     fclose(fp);
     #endif
 
-    printf ("\nAll tasks deleted\n");
+    printf ("\nLog written to %s\n", log_filename);
 }
 
 /******************** TSK 1 ********************/
