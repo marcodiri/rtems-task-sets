@@ -27,14 +27,14 @@ The [Dockerfile](https://github.com/marcodiri/rtems-task-sets/blob/master/Docker
  Then compile the applications in a container (pass the absolute path to the `./app` folder before the colon):
  ```shell
 > docker run --rm -it -v /absolute/path/to/app/folder:/app rtems:6 
-> chmod +x ./waf
+$ chmod +x ./waf
 
 # build for raspberry
-> ./waf configure --rtems=/opt/rtems/6 --rtems-bsp=aarch64/raspberrypi4b
-> ./waf
+$ ./waf configure --rtems=/opt/rtems/6 --rtems-bsp=aarch64/raspberrypi4b
+$ ./waf
 
 # build for xilinx_zynqmp_lp64_qemu
-> ./waf configure --rtems=/opt/rtems/6 --rtems-bsp=aarch64/xilinx_zynqmp_lp64_qemu
-> ./waf
+$ ./waf configure --rtems=/opt/rtems/6 --rtems-bsp=aarch64/xilinx_zynqmp_lp64_qemu
+$ ./waf
  ```
  Outputs will be in the `build` directory.
