@@ -8,6 +8,10 @@
 #include <inttypes.h>
 #include <time.h>
 #include <rtems.h>
+#include <bsp.h>
+
+#define pc386 1
+#define raspberrypi4b 2
 
 
 extern rtems_id log_q_id;

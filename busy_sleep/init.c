@@ -7,7 +7,7 @@
 #include <rtems/bspIo.h>
 
 
-#define MEAS_N 10
+#define MEAS_N 20
 
 rtems_task Init(
 	rtems_task_argument argument
@@ -17,13 +17,19 @@ rtems_task Init(
 	uint64_t end;
 
 	uint64_t meas[MEAS_N];
+
+	#if RTEMS_BSP==raspberrypi4b
+	printf("BSP: raspberrypi4b\n\n");
+	#elif RTEMS_BSP==pc386
+	printf("BSP: pc386\n\n");
+    #endif
 	
 	start = rtems_clock_get_uptime_nanoseconds();
 	
 	/* get subsequent measurements and print them */
 	for (int t=0; t < MEAS_N; t++)
 	{
-		busy_sleep_ms(10);
+		busy_sleep_ms(5);
 
 		end = rtems_clock_get_uptime_nanoseconds();
 		meas[t] = end-start;
@@ -41,5 +47,8 @@ rtems_task Init(
       printf("%d  ", meas[loop]-meas[loop-1]);
 	fflush(stdout);
 
+    char c;
+    printf("\n\nPress Enter to exit...\n");
+    scanf("%c",&c);
 	exit( 0 );
 }

@@ -90,9 +90,16 @@ int log_receive(
 
 void busy_sleep_ms(uint32_t ms)
 {
-	/* cycles corresponding to 1ms
+    #if RTEMS_BSP==raspberrypi4b
+	/* cycles corresponding to roughly 1ms
+	   in raspberrypi4b */
+    uint32_t cycles = 85000;
+    #else
+	/* cycles corresponding to roughly 1ms
 	   in pc386 qemu simulator */
     uint32_t cycles = 106200;
+    #endif
+
     uint32_t count = 0;
     while ( count < cycles*ms )
     {
