@@ -3,11 +3,18 @@ import rtems_waf.rtems as rtems
 def build(bld):
     rtems.build(bld)
 
+    exe_name = 'tsk_set1.exe'
+    objcopycmd = ' '.join(bld.get_env()['OBJCOPY'])
+    
     bld(features = 'c cprogram',
-        target = 'tsk_set1.exe',
+        target = exe_name,
         source = [
             'init.c',
             '../utils.c',
             'tasks.c'
             ]
         )
+    bld(rule=objcopycmd + ' -Obinary ${SRC} ${TGT}',
+        source = exe_name,
+        target='kernel8.img',
+        name='kernel8.img')

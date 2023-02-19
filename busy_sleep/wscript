@@ -18,10 +18,17 @@ def build(bld):
         '-fno-aggressive-loop-optimizations',
         ]
 
+    exe_name = 'busy_sleep.exe'
+    objcopycmd = ' '.join(bld.get_env()['OBJCOPY'])
+    
     bld(features = 'c cprogram',
-        target = 'busy_sleep.exe',
+        target = exe_name,
         source = [
             'init.c',
             '../tsk_sets/utils.c'
             ]
         )
+    bld(rule=objcopycmd + ' -Obinary ${SRC} ${TGT}',
+        source = exe_name,
+        target='kernel8.img',
+        name='kernel8.img')
