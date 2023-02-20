@@ -25,5 +25,5 @@ def configure(conf):
 def build(bld):
     rtems.build(bld)
 
-    bld.recurse('busy_sleep')
+    bld.recurse('busy_sleep_measure')
     bld.recurse('tsk_sets')
