@@ -138,7 +138,7 @@ void User_program(
     fclose(fp);
     #endif
 
-    printf ("\nLog written to %s\n", log_filename);
+    printf ("\nLog written to %s\n\n", log_filename);
 }
 
 /******************** TSK 1 ********************/
