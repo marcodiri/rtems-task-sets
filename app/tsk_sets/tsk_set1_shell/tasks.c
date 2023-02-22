@@ -19,7 +19,7 @@ rtems_name task_name[ ] = {
 };
 rtems_id   release_task_id[ 5 ];
 
-rtems_task_priority task_prio[ ] = { 2, 3, 4 };
+rtems_task_priority task_prio[ ] = { 2, 4, 6 };
 rtems_interval      task_period[ ] = { 40, 40, 80 };
 
 rtems_id   mux1;
@@ -60,7 +60,7 @@ void User_program(
         rtems_build_name('M', 'U', 'X', '1'),
         1,
         RTEMS_BINARY_SEMAPHORE | RTEMS_PRIORITY | RTEMS_PRIORITY_CEILING,
-        task_prio[ 1 ],
+        task_prio[ 1 ] - 1,
         &mux1
     );
     check_status_fatal(status,RTEMS_SUCCESSFUL,"rtems_semaphore_create1");
@@ -224,7 +224,7 @@ rtems_task Tsk2_job(
     status = rtems_semaphore_obtain(mux1, RTEMS_WAIT, RTEMS_NO_TIMEOUT);
     check_status_fatal(status,RTEMS_SUCCESSFUL,"rtems_semaphore_obtain");
     log_send( "t5" );
-    busy_sleep_ms(5);
+    busy_sleep_ms(7);
     log_send( "t6" );
     status = rtems_semaphore_release(mux1);
     check_status_fatal(status,RTEMS_SUCCESSFUL,"rtems_semaphore_release");
