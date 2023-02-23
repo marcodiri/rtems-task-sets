@@ -6,7 +6,6 @@
 
 
 rtems_id log_q_id;
-const unsigned int log_q_len = 100000;
 
 
 void log_send( char * msg )

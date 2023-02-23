@@ -26,6 +26,7 @@ rtems_id   mux1;
 rtems_id   mux2;
 
 unsigned int max_iter = 200;
+const unsigned int log_q_len = 100000;
 
 
 void User_program(
