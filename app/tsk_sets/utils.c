@@ -92,11 +92,11 @@ void busy_sleep_ms(uint32_t ms)
     #if RTEMS_BSP==raspberrypi4b
 	/* cycles corresponding to roughly 1ms
 	   in raspberrypi4b */
-    uint32_t cycles = 85000;
+    uint32_t cycles = 83714;
     #else
 	/* cycles corresponding to roughly 1ms
 	   in xilinx_zynqmp_lp64_qemu simulator */
-    uint32_t cycles = 118000;
+    uint32_t cycles = 42471;
     #endif
 
     uint32_t count = 0;
