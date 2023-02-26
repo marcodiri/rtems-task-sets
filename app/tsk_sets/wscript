@@ -24,3 +24,4 @@ def build(bld):
         ]
 
     bld.recurse('tsk_set1_shell')
+    bld.recurse('tsk_set2_shell')
