@@ -25,8 +25,8 @@ rtems_interval      task_period[ ] = { 40, 40, 80, 100, 120 };
 rtems_id   mux1;
 rtems_id   mux2;
 
-unsigned int max_iter = 4500;
-const unsigned int log_q_len = 100000;
+unsigned int max_iter = 45000;
+const unsigned int log_q_len = 1000000;
 
 
 void User_program(

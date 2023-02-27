@@ -28,7 +28,7 @@ void log_send( char * msg )
     task_log_ptr->msg = msg;
 
     if( rtems_message_queue_send(
-        log_q_id, &task_log_ptr, sizeof(char **)) != RTEMS_SUCCESSFUL )
+        log_q_id, &task_log_ptr, sizeof(TaskLog **)) != RTEMS_SUCCESSFUL )
     {
         free(task_log_ptr);
     }
