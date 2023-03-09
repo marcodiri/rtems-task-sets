@@ -137,9 +137,8 @@ void User_program(
 
     #ifdef LOG_TO_FILE
     fclose(fp);
-    #endif
-
     printf ("\nLog written to %s\n\n", log_filename);
+    #endif
 }
 
 /******************** TSK 1 ********************/

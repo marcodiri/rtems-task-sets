@@ -27,3 +27,4 @@ def build(bld):
 
     bld.recurse('busy_sleep_measure')
     bld.recurse('tsk_sets')
+    bld.recurse('tsk_sets_psx')
