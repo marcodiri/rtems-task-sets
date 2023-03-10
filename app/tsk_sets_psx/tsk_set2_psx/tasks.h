@@ -16,7 +16,6 @@ extern int task_period[ ];  /* tasks periods ms */
 extern pthread_mutex_t   mux1;
 extern pthread_mutex_t   mux2;
 extern pthread_mutex_t   mux_c;
-extern sem_t   sem1;
 extern pthread_cond_t   cond;
 
 

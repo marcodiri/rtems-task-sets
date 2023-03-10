@@ -18,7 +18,6 @@ int task_period[ ] = { 40, 40, 80, 100, 120 };
 pthread_mutex_t   mux1;
 pthread_mutex_t   mux2;
 pthread_mutex_t   mux_c;
-sem_t   sem1;
 pthread_cond_t   cond;
 
 unsigned int max_iter = 45000;
@@ -64,37 +63,31 @@ void User_program(
     );
     pthread_mutexattr_setprioceiling(
         &mux_attr1,
-        task_prio[ 0 ] + 1
+        task_prio[ 2 ] + 1
     );
     status = pthread_mutex_init( &mux1, &mux_attr1 );
     check_status_fatal(status,0,"pthread_mutex_init");
 
-    // pthread_mutexattr_t mux_attr2;
-    // status = pthread_mutexattr_init( &mux_attr2 );
-    // check_status_fatal(status,0,"pthread_mutexattr_init");
-    // pthread_mutexattr_setprotocol(
-    //     &mux_attr2,
-    //     PTHREAD_PRIO_PROTECT
-    // );
-    // pthread_mutexattr_setprioceiling(
-    //     &mux_attr2,
-    //     task_prio[ 1 ] + 1
-    // );
-    // status = pthread_mutex_init( &mux2, &mux_attr2 );
-    // check_status_fatal(status,0,"pthread_mutex_init");
+    pthread_mutexattr_t mux_attr2;
+    status = pthread_mutexattr_init( &mux_attr2 );
+    check_status_fatal(status,0,"pthread_mutexattr_init");
+    pthread_mutexattr_setprotocol(
+        &mux_attr2,
+        PTHREAD_PRIO_PROTECT
+    );
+    pthread_mutexattr_setprioceiling(
+        &mux_attr2,
+        task_prio[ 2 ] + 1
+    );
+    status = pthread_mutex_init( &mux2, &mux_attr2 );
+    check_status_fatal(status,0,"pthread_mutex_init");
 
     status = pthread_mutex_init( &mux_c, NULL );
     check_status_fatal(status,0,"pthread_mutex_init");
 
     /* COND VARIABLE */
-
     status = pthread_cond_init( &cond, NULL );
     check_status_fatal(status,0,"pthread_cond_init");
-
-
-    /* SEMAPHORES */
-    status = sem_init(&sem1, 0, 1);
-    check_status_fatal(status,0,"sem_init");
 
 
     pthread_attr_t attr;
@@ -106,14 +99,14 @@ void User_program(
     check_status_fatal(status,0,"pthread_setschedparam");
 
 
-    /* Create threads */
+    /* CREATE RELEASE TASKS */
     pthread_attr_init(&attr);
     status=pthread_attr_setinheritsched(&attr,PTHREAD_EXPLICIT_SCHED);
     check_status_fatal(status,0,"pthread_attr_setinheritsched");
     status=pthread_attr_setschedpolicy(&attr,SCHED_FIFO);
     check_status_fatal(status,0,"pthread_attr_setschedpolicy");
 
-    param.sched_priority=100;
+    param.sched_priority=99;
     status=pthread_attr_setschedparam(&attr,&param);
     check_status_fatal(status,0,"pthread_attr_setschedparam");
 
@@ -127,13 +120,23 @@ void User_program(
         Tsk2_release, NULL);
     check_status_fatal(status,0,"pthread_create");
 
-    log_send("START");
-    sleep(10);
+    status=pthread_create(
+        &release_task_id[ 2 ], &attr,
+        Tsk3_release, NULL);
+    check_status_fatal(status,0,"pthread_create");
 
-    status = pthread_join( release_task_id[ 0 ], NULL );
-    check_status_fatal(status,0,"pthread_join");
-    status = pthread_join( release_task_id[ 1 ], NULL );
-    check_status_fatal(status,0,"pthread_join");
+    status=pthread_create(
+        &release_task_id[ 3 ], &attr,
+        Tsk4_release, NULL);
+    check_status_fatal(status,0,"pthread_create");
+
+    status=pthread_create(
+        &release_task_id[ 4 ], &attr,
+        Tsk5_release, NULL);
+    check_status_fatal(status,0,"pthread_create");
+
+    log_send("START");
+    sleep(1800);
 
     // poison pill
     log_send("exit");
@@ -153,6 +156,7 @@ void User_program(
 
     printf ("\nEND\n\n");
 
+    exit(0);
 }
 
 /******************** TSK 1 ********************/
@@ -160,39 +164,19 @@ void* Tsk1_job(
   void* arg
 )
 {
-    printf ("\nTsk1 job start\n");
-
     int status;
-    struct sched_param param;
 
-    // param.sched_priority=11;
-    // status=pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
-    // check_status_fatal(status,0,"pthread_setschedparam");
+    status = pthread_mutex_lock( &mux_c );
+    check_status_fatal(status,0,"pthread_mutex_lock");
+    status = pthread_cond_wait( &cond, &mux_c );
+    check_status_fatal(status,0,"pthread_cond_wait");
+    log_send( "t1" );
 
-    int                policy;
-    pthread_getschedparam(
-        pthread_self(),
-        &policy,
-        &param
-    );
-    printf ("Tsk1 prio: %d - policy: %d\n", param.sched_priority, policy);
+    busy_sleep_ms(6);
+    log_send( "t2" );
+    status = pthread_mutex_unlock( &mux_c );
+    check_status_fatal(status,0,"pthread_mutex_unlock");
 
-    sleep(1);
-
-    // status = pthread_mutex_lock( &mux_c );
-    // check_status_fatal(status,0,"pthread_mutex_lock_1");
-    // status = pthread_cond_wait( &cond, &mux_c );
-    // check_status_fatal(status,0,"pthread_cond_wait");
-
-    printf("tsk1 cond var\n");
-    pthread_getschedparam(
-        pthread_self(),
-        &policy,
-        &param
-    );
-    printf ("Tsk1 prio: %d\n", param.sched_priority);
-
-    printf ("Tsk1 job end\n\n");
     pthread_exit(0);
 }
 
@@ -203,39 +187,40 @@ void* Tsk1_release(
     int status;
     pthread_attr_t attr;
     struct sched_param param;
-
-
 	struct periodic_info info;
 
-    msleep(task_period[0]);
+    /* Create threads */
+    pthread_attr_init(&attr);
+    status=pthread_attr_setinheritsched(&attr,PTHREAD_EXPLICIT_SCHED);
+    check_status_fatal(status,0,"pthread_attr_setinheritsched");
+    status=pthread_attr_setschedpolicy(&attr,SCHED_FIFO);
+    check_status_fatal(status,0,"pthread_attr_setschedpolicy");
 
-	make_periodic (task_period[0], &info);
+    param.sched_priority=task_prio[ 0 ];
+    status=pthread_attr_setschedparam(&attr,&param);
+    check_status_fatal(status,0,"pthread_attr_setschedparam");
 
-    int it=0;
-	while (it<5)
+    msleep(task_period[ 0 ]);
+	make_periodic (task_period[ 0 ], &info);
+
+    uint32_t iter = 0;
+    while ( iter < max_iter )
 	{
-        it++;
-        log_send("tsk1 period");
+        iter++;
+        if (info.wakeups_missed)
+            break;
 
+        status=pthread_create(
+            &task_id[ 0 ], &attr,
+            Tsk1_job, NULL);
+        check_status_fatal(status,0,"pthread_create");
+        pthread_detach( task_id[ 0 ] );
+
+        log_send("t0");
 		wait_period (&info);
 	}
-
-    // /* Create threads */
-    // pthread_attr_init(&attr);
-    // status=pthread_attr_setinheritsched(&attr,PTHREAD_EXPLICIT_SCHED);
-    // check_status_fatal(status,0,"pthread_attr_setinheritsched");
-    // status=pthread_attr_setschedpolicy(&attr,SCHED_FIFO);
-    // check_status_fatal(status,0,"pthread_attr_setschedpolicy");
-
-    // param.sched_priority=task_prio[ 0 ];
-    // status=pthread_attr_setschedparam(&attr,&param);
-    // check_status_fatal(status,0,"pthread_attr_setschedparam");
-    // status=pthread_create(
-    //     &task_id[ 0 ], &attr,
-    //     Tsk1_job, NULL);
-    // check_status_fatal(status,0,"pthread_create");
-
-    // printf ("\nTsk1 release\n");
+    if (info.wakeups_missed)
+        log_send( "miss1" );
 
     pthread_exit(0);
 }
@@ -245,56 +230,16 @@ void* Tsk2_job(
   void* arg
 )
 {
-    
-    printf ("\nTsk2 job\n");
-
     int status;
-    int                policy;
-    struct sched_param param;
-    pthread_getschedparam(
-        pthread_self(),
-        &policy,
-        &param
-    );
-    printf ("Tsk2 prio: %d\n", param.sched_priority);
 
-
-    // param.sched_priority=11;
-    // status=pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
-    // check_status_fatal(status,0,"pthread_setschedparam");
-
-    status = pthread_mutex_lock( &mux1 );
-    check_status_fatal(status,0,"pthread_mutex_lock_1");
-    printf("tsk2 busy\n");
-    busy_sleep_ms(10000);
-    busy_sleep_ms(10000);
-    printf("tsk2 deboost\n");
-    status = pthread_mutex_unlock( &mux1 );
-    check_status_fatal(status,0,"pthread_mutex_unlock_1");
-
-    status = sem_wait(&sem1);
-    check_status_fatal(status,0,"sem_wait");
-    printf("Tsk2 critical sec\n");
-    pthread_getschedparam(
-        pthread_self(),
-        &policy,
-        &param
-    );
-    printf ("Tsk2 prio: %d\n", param.sched_priority);
-    
-    busy_sleep_ms(10000);
-
-    printf("Tsk2 cond signal\n");
+    busy_sleep_ms(1);
+    log_send( "t4" );
     status = pthread_cond_signal( &cond );
     check_status_fatal(status,0,"pthread_cond_signal");
 
-    busy_sleep_ms(10000);
+    busy_sleep_ms(1);
+    log_send( "t5" );
 
-    status = sem_post(&sem1);
-    check_status_fatal(status,0,"sem_post");
-
-
-    printf ("Tsk2 job end\n\n");
     pthread_exit(0);
 }
 
@@ -305,39 +250,252 @@ void* Tsk2_release(
     int status;
     pthread_attr_t attr;
     struct sched_param param;
-
     struct periodic_info info;
 
-    msleep(task_period[1]);
+    /* Create threads */
+    pthread_attr_init(&attr);
+    status=pthread_attr_setinheritsched(&attr,PTHREAD_EXPLICIT_SCHED);
+    check_status_fatal(status,0,"pthread_attr_setinheritsched");
+    status=pthread_attr_setschedpolicy(&attr,SCHED_FIFO);
+    check_status_fatal(status,0,"pthread_attr_setschedpolicy");
 
-	make_periodic (task_period[1], &info);
+    param.sched_priority=task_prio[ 1 ];
+    status=pthread_attr_setschedparam(&attr,&param);
+    check_status_fatal(status,0,"pthread_attr_setschedparam");
 
-    int it=0;
-	while (it<5)
+    msleep(task_period[ 1 ]);
+	make_periodic (task_period[ 1 ], &info);
+
+    uint32_t iter = 0;
+    while ( iter < max_iter )
 	{
-        it++;
-        log_send("tsk2 period");
+        iter++;
+        if (info.wakeups_missed)
+            break;
 
+        status=pthread_create(
+            &task_id[ 1 ], &attr,
+            Tsk2_job, NULL);
+        check_status_fatal(status,0,"pthread_create");
+        pthread_detach( task_id[ 1 ] );
+
+        log_send("t3");
 		wait_period (&info);
 	}
+    if (info.wakeups_missed)
+        log_send( "miss2" );
 
-    // /* Create threads */
-    // pthread_attr_init(&attr);
-    // status=pthread_attr_setinheritsched(&attr,PTHREAD_EXPLICIT_SCHED);
-    // check_status_fatal(status,0,"pthread_attr_setinheritsched");
-    // status=pthread_attr_setschedpolicy(&attr,SCHED_FIFO);
-    // check_status_fatal(status,0,"pthread_attr_setschedpolicy");
+    pthread_exit(0);
+}
 
-    // param.sched_priority=task_prio[ 1 ];
-    // status=pthread_attr_setschedparam(&attr,&param);
-    // check_status_fatal(status,0,"pthread_attr_setschedparam");
-    // status=pthread_create(
-    //     &task_id[ 1 ], &attr,
-    //     Tsk2_job, NULL);
-    // check_status_fatal(status,0,"pthread_create");
+/******************** TSK 3 ********************/
+void* Tsk3_job(
+  void* arg
+)
+{
+    int status;
 
-    // printf ("\nTsk2 release\n");
+    status = pthread_mutex_lock( &mux1 );
+    check_status_fatal(status,0,"pthread_mutex_lock");
+    log_send( "t7" );
+    busy_sleep_ms(1);
+    log_send( "t8" );
+    status = pthread_mutex_unlock( &mux1 );
+    check_status_fatal(status,0,"pthread_mutex_unlock");
 
+    busy_sleep_ms(6);
+    log_send( "t9" );
+
+    status = pthread_mutex_lock( &mux2 );
+    check_status_fatal(status,0,"pthread_mutex_lock");
+    log_send( "t10" );
+    busy_sleep_ms(1);
+    log_send( "t11" );
+    status = pthread_mutex_unlock( &mux2 );
+    check_status_fatal(status,0,"pthread_mutex_unlock");
+
+    pthread_exit(0);
+}
+
+void* Tsk3_release(
+    void* arg
+)
+{
+    int status;
+    pthread_attr_t attr;
+    struct sched_param param;
+    struct periodic_info info;
+
+    /* Create threads */
+    pthread_attr_init(&attr);
+    status=pthread_attr_setinheritsched(&attr,PTHREAD_EXPLICIT_SCHED);
+    check_status_fatal(status,0,"pthread_attr_setinheritsched");
+    status=pthread_attr_setschedpolicy(&attr,SCHED_FIFO);
+    check_status_fatal(status,0,"pthread_attr_setschedpolicy");
+
+    param.sched_priority=task_prio[ 2 ];
+    status=pthread_attr_setschedparam(&attr,&param);
+    check_status_fatal(status,0,"pthread_attr_setschedparam");
+
+    msleep(task_period[ 2 ]);
+	make_periodic (task_period[ 2 ], &info);
+
+    uint32_t iter = 0;
+    while ( iter < max_iter )
+	{
+        iter++;
+        if (info.wakeups_missed)
+            break;
+
+        status=pthread_create(
+            &task_id[ 2 ], &attr,
+            Tsk3_job, NULL);
+        check_status_fatal(status,0,"pthread_create");
+        pthread_detach( task_id[ 2 ] );
+
+        log_send("t6");
+		wait_period (&info);
+	}
+    if (info.wakeups_missed)
+        log_send( "miss3" );
+
+    pthread_exit(0);
+}
+
+/******************** TSK 4 ********************/
+void* Tsk4_job(
+  void* arg
+)
+{
+    int status;
+
+    status = pthread_mutex_lock( &mux1 );
+    check_status_fatal(status,0,"pthread_mutex_lock");
+    log_send( "t13" );
+    busy_sleep_ms(1);
+    log_send( "t14" );
+    status = pthread_mutex_unlock( &mux1 );
+    check_status_fatal(status,0,"pthread_mutex_unlock");
+
+    busy_sleep_ms(6);
+    log_send( "t15" );
+
+    status = pthread_mutex_lock( &mux2 );
+    check_status_fatal(status,0,"pthread_mutex_lock");
+    log_send( "t16" );
+    busy_sleep_ms(1);
+    log_send( "t17" );
+    status = pthread_mutex_unlock( &mux2 );
+    check_status_fatal(status,0,"pthread_mutex_unlock");
+
+    pthread_exit(0);
+}
+
+void* Tsk4_release(
+    void* arg
+)
+{
+    int status;
+    pthread_attr_t attr;
+    struct sched_param param;
+    struct periodic_info info;
+
+    /* Create threads */
+    pthread_attr_init(&attr);
+    status=pthread_attr_setinheritsched(&attr,PTHREAD_EXPLICIT_SCHED);
+    check_status_fatal(status,0,"pthread_attr_setinheritsched");
+    status=pthread_attr_setschedpolicy(&attr,SCHED_FIFO);
+    check_status_fatal(status,0,"pthread_attr_setschedpolicy");
+
+    param.sched_priority=task_prio[ 3 ];
+    status=pthread_attr_setschedparam(&attr,&param);
+    check_status_fatal(status,0,"pthread_attr_setschedparam");
+
+    msleep(task_period[ 3 ]);
+	make_periodic (task_period[ 3 ], &info);
+
+    uint32_t iter = 0;
+    while ( iter < max_iter )
+	{
+        iter++;
+        if (info.wakeups_missed)
+            break;
+
+        status=pthread_create(
+            &task_id[ 3 ], &attr,
+            Tsk4_job, NULL);
+        check_status_fatal(status,0,"pthread_create");
+        pthread_detach( task_id[ 3 ] );
+
+        log_send("t12");
+		wait_period (&info);
+	}
+    if (info.wakeups_missed)
+        log_send( "miss3" );
+
+    pthread_exit(0);
+}
+
+/******************** TSK 5 ********************/
+void* Tsk5_job(
+  void* arg
+)
+{
+    int status;
+
+    busy_sleep_ms(1);
+    log_send( "t19" );
+
+    status = pthread_mutex_lock( &mux1 );
+    check_status_fatal(status,0,"pthread_mutex_lock");
+    log_send( "t20" );
+    busy_sleep_ms(1);
+    log_send( "t21" );
+    status = pthread_mutex_unlock( &mux1 );
+    check_status_fatal(status,0,"pthread_mutex_unlock");
+
+    pthread_exit(0);
+}
+
+void* Tsk5_release(
+    void* arg
+)
+{
+    int status;
+    pthread_attr_t attr;
+    struct sched_param param;
+
+    /* Create threads */
+    pthread_attr_init(&attr);
+    status=pthread_attr_setinheritsched(&attr,PTHREAD_EXPLICIT_SCHED);
+    check_status_fatal(status,0,"pthread_attr_setinheritsched");
+    status=pthread_attr_setschedpolicy(&attr,SCHED_FIFO);
+    check_status_fatal(status,0,"pthread_attr_setschedpolicy");
+
+    param.sched_priority=task_prio[ 4 ];
+    status=pthread_attr_setschedparam(&attr,&param);
+    check_status_fatal(status,0,"pthread_attr_setschedparam");
+
+    unsigned int lower = task_period[ 4 ];
+    unsigned int upper = task_period[ 4 ]*2;
+    unsigned int sleep_time;
+
+    uint32_t iter = 0;
+    while ( iter < max_iter )
+	{
+        iter++;
+
+        sleep_time = (rand() % (upper - lower + 1)) + lower;
+        msleep(sleep_time);
+
+        status=pthread_create(
+            &task_id[ 4 ], &attr,
+            Tsk5_job, NULL);
+        check_status_fatal(status,0,"pthread_create");
+        pthread_detach( task_id[ 4 ] );
+
+        log_send("t18");
+	}
 
     pthread_exit(0);
 }
