@@ -6,17 +6,19 @@ import sys, getopt
 def print_usage():
     print("Usage: convert_log.py -i <inputfile>")
     print("""Options:
-          -i <inputfile>
-          -o <outputfile>
-          --timens, set this option if timestamps are nanoseconds.
+          -i           <inputfile>
+          -o           <outputfile>
+          --timens     set this option if timestamps are nanoseconds.
+          --no-sort    set this option to leave timestamps as they are.
           """)
-
+    
 def main(argv):
     inputfile = None
     outputfile = "relative_millisec.txt"
     timens = False
+    no_sort = False
     
-    opts, args = getopt.getopt(argv,"hi:o:",["timens"])
+    opts, args = getopt.getopt(argv,"hi:o:",["timens","no-sort"])
     for opt, arg in opts:
         if opt == '-h':
             print_usage()
@@ -27,6 +29,8 @@ def main(argv):
             outputfile = arg
         elif opt in ("--timens"):
             timens = True
+        elif opt in ("--no-sort"):
+            no_sort = True
     
     if inputfile is None:
         print_usage()
@@ -36,6 +40,9 @@ def main(argv):
     with open(inputfile, 'r') as file:
         log = file.read()
     spl = log.strip().split("\n")
+    if not no_sort:
+        # order timestamps (in case of preemption in the middle of logging)
+        spl.sort(key=lambda el : int(el.split("-")[0]))
     with open(outputfile, "w") as f:
         for s in spl:
             ns, event = s.split("-")
