@@ -20,7 +20,7 @@ rtems_name task_name[ ] = {
 rtems_id   release_task_id[ 5 ];
 
 rtems_task_priority task_prio[ ] = { 2, 4, 6 };
-rtems_interval      task_period[ ] = { 40, 40, 80 };
+rtems_interval      task_period[ ] = { 40, 40, 120 };
 
 rtems_id   mux1;
 rtems_id   mux2;
