@@ -23,4 +23,5 @@ def build(bld):
         # '-DLOG_TO_FILE',  # create log file
         ]
 
+    bld.recurse('tsk_set1_psx')
     bld.recurse('tsk_set2_psx')

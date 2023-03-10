@@ -12,13 +12,14 @@ rtems_id log_q_id;
 
 void block_rt_signals()
 {
-    sigset_t alarm_sig;
-	int i;
-
 	/* Block all real time signals so they can be used for the timers.
 	   Note: this has to be done in main() before any threads are created
 	   so they all inherit the same mask. Doing it later is subject to
 	   race conditions */
+    
+    sigset_t alarm_sig;
+	int i;
+
 	sigemptyset (&alarm_sig);
 	for (i = SIGRTMIN; i <= SIGRTMAX; i++)
 		sigaddset (&alarm_sig, i);
@@ -75,7 +76,7 @@ void wait_period (struct periodic_info *info)
 {
 	int sig;
 	sigwait (&(info->alarm_sig), &sig);
-        info->wakeups_missed += timer_getoverrun (info->timer_id);
+    info->wakeups_missed += timer_getoverrun (info->timer_id);
 }
 
 /* msleep(): Sleep for the requested number of milliseconds. */
